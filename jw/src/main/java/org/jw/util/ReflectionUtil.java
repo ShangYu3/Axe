@@ -1,8 +1,9 @@
 package org.jw.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jw.bean.persistence.EntityFieldMethod;
+import org.jw.exception.RestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,22 @@ import org.slf4j.LoggerFactory;
 public final class ReflectionUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReflectionUtil.class);
+
+    
+    public static List<Method> getMethodByAnnotation(Class<?> cls,Class<? extends Annotation> annotationClass){
+    	List<Method> result = new ArrayList<Method>();
+    	Method[] methods = cls.getDeclaredMethods();
+    	for(Method method:methods){
+    		if(method.isAnnotationPresent(annotationClass)){
+    			result.add(method);
+    		}
+    	}
+    	Class<?> superClass = cls.getSuperclass();
+    	if(superClass != null){
+    		result.addAll(getMethodByAnnotation(superClass, annotationClass));
+    	}
+    	return result;
+    }
     
     /**
      * 获取Class中的成员变量，如果有父类，一并获取
@@ -126,9 +144,9 @@ public final class ReflectionUtil {
     		Field field = fieldMap.get(fieldName);
     		if(field == null) continue;
 			//#带1个参数，类型与Field一至
-    		Parameter[] parameterAry = method.getParameters();
+    		Class<?>[] parameterAry = method.getParameterTypes();
     		if(parameterAry == null || parameterAry.length != 1) continue;
-    		if(!compareType(parameterAry[0].getType(), field.getType())) continue;
+    		if(!compareType(parameterAry[0], field.getType())) continue;
     		//#排除的字段
     		if(withoutFieldNameSet.contains(fieldName)) continue;
     		
@@ -176,14 +194,13 @@ public final class ReflectionUtil {
         try {
 			result = method.invoke(obj,args);
 		} catch (IllegalAccessException e) {
-			LOGGER.error("invoke method failure",e);
+			LOGGER.error("invoke method failure,method : "+method+", args : "+args,e);
 			throw new RuntimeException(e);
 		} catch (IllegalArgumentException e) {
-			LOGGER.error("invoke method failure",e);
+			LOGGER.error("invoke method failure,method : "+method+", args : "+args,e);
 			throw new RuntimeException(e);
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			LOGGER.error("invoke method failure",e);
+			LOGGER.error("invoke method failure,method : "+method+", args : "+args,e);
 			Throwable cause = e.getCause();
 			if(cause != null){
 				if(cause instanceof RestException){

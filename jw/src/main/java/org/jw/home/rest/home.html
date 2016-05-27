@@ -1,0 +1,101 @@
+<java>
+StringBuilder html = new StringBuilder();
+</java>
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>jw homepage</title>
+	</head>
+<body>
+	<table width="100%">
+		<tr><td align="center"><font size="28">Welcome to use jw!</font></td></tr>
+
+		<tr><td><table cellspacing="0px"><tr><td style="background-color: #AE0000">
+		&nbsp;<font color="white"><b>系统运行-概览</b></font>&nbsp;
+		</td></tr></table></td></tr>
+		
+		<tr><td height="2px" style="background-color:#AE0000"></td></tr>
+		<tr><td>
+			<table width="100%">
+				<tr style="background-color: #F0F0F0;">
+					<td align="center">&nbsp;</td>
+					<td align="center"><b>启动时间</b></td>
+					<td align="center"><b>运行时长</b></td>
+					<td align="center"><b>访问次数</b></td>
+				</tr>
+				<tr>
+					<td align="center">&nbsp;</td>
+					<java>
+					Date startupTime = FrameworkStatusHelper.getStartupTime();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					</java>
+					<td align="center">"+sdf.format(startupTime)+"</td>
+					<java>
+					long runTimeSec = (System.currentTimeMillis()-startupTime.getTime()) / 1000;
+					String runTime = "";
+					if (runTimeSec < 60) {
+						runTime = runTimeSec + "秒";
+					} else {
+						long runTimeMin = runTimeSec / 60;
+						if (runTimeMin < 60) {
+							runTimeSec = runTimeSec - (runTimeMin * 60);
+							runTime = runTimeMin + "分" + runTimeSec + "秒";
+						} else {
+							long runTimeHour = runTimeMin / 60;
+							if (runTimeHour < 24) {
+								runTimeMin = (runTimeSec-(runTimeHour * 60 * 60)) / 60;
+								runTimeSec = runTimeSec - (runTimeHour * 60 * 60) - (runTimeMin * 60);
+								runTime = runTimeHour + "时" + runTimeMin + "分" + runTimeSec + "秒";
+							} else {
+								long runTimeDay = runTimeHour / 24;
+								runTimeHour = (runTimeSec-(runTimeDay * 24 * 60 * 60))/24;
+								runTimeMin = (runTimeSec - (runTimeDay * 24 * 60 * 60) - (runTimeHour * 60 * 60))/60;
+								runTimeSec = runTimeSec - (runTimeDay * 24 * 60 * 60) - (runTimeHour * 60 * 60)
+										- (runTimeMin * 60);
+								runTime = runTimeDay + "天" + runTimeHour + "时" + runTimeMin + "分" + runTimeSec + "秒";
+							}
+						}
+					}
+					</java>
+					<td align="center">"+runTime+"</td>
+					<td align="center"><a href="访问者ip详情列表">;)</a></td>
+				</tr>
+			</table>
+		</td></tr>
+
+		<tr><td><table cellspacing="0px"><tr><td style="background-color: #AE0000">
+		&nbsp;<font color="white"><b>MVC-概览</b></font>&nbsp;
+		</td></tr></table></td></tr>
+		
+		<tr><td height="2px" style="background-color:#AE0000"></td></tr>
+		<tr><td>
+			<table width="100%">
+				<tr>
+					<td align="center"><a href=""+contextPath+"/jw/filter">Filter</a> x"+FilterHelper.getSortedFilterList().size()+"</td>
+					<td align="center"><a href=""+contextPath+"/jw/controller">Controller</a> x"+ClassHelper.getControllerClassSet().size()+"</td>
+					<td align="center"><a href=""+contextPath+"/jw/action">Action</a> x"+ControllerHelper.getActionList().size()+"</td>
+					<td align="center">Service x"+ClassHelper.getServiceClassSet().size()+"</td>
+					<java>
+					Set<Class<?>> serviceClassSet = ClassHelper.getClassSetByAnnotation(Service.class);
+					int tnsPointCount = 0;
+					for(Class<?> serviceClass:serviceClassSet){
+						List<Method> methods = ReflectionUtil.getMethodByAnnotation(serviceClass, Tns.class);
+						if(CollectionUtil.isNotEmpty(methods)){
+							tnsPointCount = tnsPointCount+methods.size();
+						}
+					}
+					</java>
+					<td align="center"><a href=""+contextPath+"/jw/tns">Tns point </a> x"+tnsPointCount+"</td>
+					<td align="center"><a href=""+contextPath+"/jw/dao">Dao</a> x"+ClassHelper.getClassSetByAnnotation(Dao.class).size()+"</td>
+					<td align="center">Table</a> x"+TableHelper.getEntityClassMap().size()+"</td>
+					<td align="center"><a href=""+contextPath+"/jw/datasource">Datasource</a> x"+DataSourceHelper.getDataSourceAll().size()+"</td>
+				</tr>
+			</table>
+		</td></tr>
+	</table>
+</body>
+</html>
+<java>
+printHtml(response, html.toString());
+</java>
